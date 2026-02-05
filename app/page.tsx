@@ -994,11 +994,11 @@ export default function BeaverEscape() {
               <span className="result-value">{formatTime(playTime)}</span>
             </div>
             <div className="result-row">
-              <span className="result-label">선택한 경로 (1층):</span>
+              <span className="result-label">선택한 경로 (1):</span>
               <span className="result-value">{booth1Name}</span>
             </div>
             <div className="result-row">
-              <span className="result-label">선택한 경로 (2층):</span>
+              <span className="result-label">선택한 경로 (2):</span>
               <span className="result-value">{booth2Name}</span>
             </div>
             <div className="result-row">
