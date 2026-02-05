@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import './game.css';
 
 type Stage = 
   | 'opening' 
@@ -41,7 +42,7 @@ const BOOTHS1 = {
       '무기력 아래 숨겨진 당신의 진짜 마음을',
       '데이터 팩에 담아라.'
     ],
-    clue: '뒤섞인 감정 아래, 진실이 숨어있다'
+    clue: '무기력 아래 숨겨진 진짜 감정들을 마주했다. 두려움, 분노, 슬픔... 그것들은 모두 당신의 일부였다.'
   },
   bakery: {
     name: 'TINY TINY BAKERY',
@@ -55,7 +56,7 @@ const BOOTHS1 = {
       '한 손에 쏙 들어오는 단단한 키링으로',
       '만들어라.'
     ],
-    clue: '압축된 근심은 단단한 힘이 된다'
+    clue: '거대해 보였던 불안들을 작게 압축하고 나니, 그것들이 당신을 지켜온 방어막이었음을 깨달았다.'
   }
 };
 
@@ -70,7 +71,7 @@ const BOOTHS2 = {
       '당신의 운명에 발생한 작은 글리치들을',
       '타로 카드로 확인하라.'
     ],
-    clue: '서양의 카드가 운명의 글리치를 보여준다'
+    clue: '운명의 카드는 말한다. 당신에게 일어난 일들은 우연이 아니라 필연이었다고. 그 속에서 당신은 계속 선택해왔다.'
   },
   saju: {
     name: 'FORTUNE HOUSE - SAJU',
@@ -82,18 +83,16 @@ const BOOTHS2 = {
       '당신의 운명에 발생한 작은 글리치들을',
       '사주 만세력으로 확인하라.'
     ],
-    clue: '동양의 만세력이 운명의 글리치를 보여준다'
+    clue: '만세력은 보여준다. 당신이 태어난 시간과 공간이 만든 고유한 패턴. 그것이 당신을 이루는 뼈대였다. 그러나 길을 개척하는 건 당신의 몫이다.'
   }
 };
 
 const INTRO_STORY = [
-  '당신은 비버입니다.',
-  '',
   '어느 날, 당신의 무기력이',
   '세상을 게임으로 바꾸어버렸다.',
   '',
   '반복되는 무기력증에 걸린 비버.',
-  '그는 쏟아지는 현실의 짐을 피해',
+  '당신은 쏟아지는 현실의 짐을 피해',
   '낯선 플스방으로 숨어든다.',
   '',
   '게임 패드를 잡고 잠이 든 찰나,',
@@ -109,10 +108,11 @@ const FINAL_BOOTH = {
     '당신이 모은 모든 조각들이',
     '하나로 모이는 곳.',
     '',
-    '이곳에서 당신은',
-    '진짜 자신을 마주하게 될 것이다.',
+    '감정, 불안, 운명.',
+    '이 모든 것이 얽혀 만들어진 존재.',
     '',
-    '당신은 어떤 비버인가?'
+    '당신은 어떤 비버인가?',
+    '무기력 속에서도 살아남은 당신은 누구인가?'
   ]
 };
 
@@ -127,24 +127,78 @@ export default function BeaverEscape() {
   const [typedText, setTypedText] = useState<string[]>([]);
   const [showButton, setShowButton] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [showCursor, setShowCursor] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [systemMessage, setSystemMessage] = useState<string | null>(null);
+  const [showTransition, setShowTransition] = useState(false);
+  const [transitionText, setTransitionText] = useState('LOADING...');
+  const [showChapterTitle, setShowChapterTitle] = useState(false);
+  const [chapterTitleText, setChapterTitleText] = useState('');
+  const [startTime, setStartTime] = useState<number>(Date.now());
+  const [playTime, setPlayTime] = useState<number>(0);
 
   // 로컬스토리지 저장/불러오기
   useEffect(() => {
     const saved = localStorage.getItem('beaverGame');
     if (saved) {
-      setGameState(JSON.parse(saved));
+      const data = JSON.parse(saved);
+      setGameState(data);
+      if (data.startTime) {
+        setStartTime(data.startTime);
+      }
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('beaverGame', JSON.stringify(gameState));
-  }, [gameState]);
+    const dataToSave = { ...gameState, startTime };
+    localStorage.setItem('beaverGame', JSON.stringify(dataToSave));
+  }, [gameState, startTime]);
+
+  // 플레이 타임 계산
+  useEffect(() => {
+    if (gameState.stage === 'ending') {
+      setPlayTime(Date.now() - startTime);
+    }
+  }, [gameState.stage, startTime]);
+
+  // 시스템 메시지 표시
+  const showSystemMessage = (message: string) => {
+    setSystemMessage(message);
+    setTimeout(() => setSystemMessage(null), 3000);
+  };
+
+  // 트랜지션 효과
+  const showTransitionEffect = (text: string, callback: () => void) => {
+    setTransitionText(text);
+    setShowTransition(true);
+    setTimeout(() => {
+      setShowTransition(false);
+      callback();
+    }, 1000);
+  };
+
+  // 챕터 타이틀 표시
+  const showChapterTitleEffect = (title: string, callback: () => void) => {
+    setChapterTitleText(title);
+    setShowChapterTitle(true);
+    setTimeout(() => {
+      setShowChapterTitle(false);
+      callback();
+    }, 2000);
+  };
 
   // 타이핑 효과
-  const typeText = (lines: string[], callback?: () => void) => {
+  useEffect(() => {
+    if (gameState.stage === 'intro') {
+      typeText(INTRO_STORY);
+    }
+  }, [gameState.stage]);
+
+  const typeText = (lines: string[]) => {
     setIsTyping(true);
     setTypedText([]);
     setShowButton(false);
+    setShowCursor(true);
 
     let currentLine = 0;
     let currentChar = 0;
@@ -154,8 +208,8 @@ export default function BeaverEscape() {
       if (currentLine >= lines.length) {
         clearInterval(typeInterval);
         setIsTyping(false);
+        setShowCursor(false);
         setShowButton(true);
-        if (callback) callback();
         return;
       }
 
@@ -174,12 +228,6 @@ export default function BeaverEscape() {
     return () => clearInterval(typeInterval);
   };
 
-  useEffect(() => {
-    if (gameState.stage === 'intro') {
-      typeText(INTRO_STORY);
-    }
-  }, [gameState.stage]);
-
   const reset = () => {
     localStorage.removeItem('beaverGame');
     setGameState({
@@ -190,65 +238,188 @@ export default function BeaverEscape() {
     });
     setTypedText([]);
     setShowButton(false);
+    setStartTime(Date.now());
+    setPlayTime(0);
+    showSystemMessage('[SYSTEM] 게임이 초기화되었습니다.');
+  };
+
+  // HUD 정보 계산
+  const getStageInfo = () => {
+    const stageMap: { [key: string]: string } = {
+      'opening': 'MENU',
+      'intro': 'INTRO',
+      'chapter1': '1-1',
+      'booth1-enter': '1-1',
+      'booth1-wait': '1-1',
+      'booth1-complete': '1-1',
+      'chapter2': '2-1',
+      'booth2-enter': '2-1',
+      'booth2-wait': '2-1',
+      'booth2-complete': '2-1',
+      'chapter3': '3-1',
+      'finalBooth-enter': '3-1',
+      'finalBooth-wait': '3-1',
+      'ending': 'CLEAR'
+    };
+    return stageMap[gameState.stage] || '---';
+  };
+
+  // 포맷된 시간 표시
+  const formatTime = (ms: number) => {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
   // 오프닝
   if (gameState.stage === 'opening') {
     return (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-8">
-        <h1 className="text-4xl font-bold text-red-600 mb-12">당신은 갇혔습니다.</h1>
-        <button
-          onClick={() => setGameState({ ...gameState, stage: 'intro' })}
-          className="px-8 py-3 bg-white text-black font-bold border-2 border-white hover:bg-blue-500 hover:text-white hover:border-blue-500"
-        >
-          시작하기
-        </button>
-      </div>
+      <>
+        <div className="game-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <h1 className="title glitch" style={{ color: '#ff0000' }}>당신은 갇혔습니다.</h1>
+          <button
+            onClick={() => {
+              setStartTime(Date.now());
+              showTransitionEffect('LOADING...', () => {
+                setGameState({ ...gameState, stage: 'intro' });
+              });
+            }}
+            className="pixel-button"
+            style={{ maxWidth: '300px' }}
+          >
+            ▶ 시작하기
+          </button>
+        </div>
+        {showTransition && (
+          <div className="transition-overlay loading">
+            <div className="loading-text">{transitionText}</div>
+          </div>
+        )}
+      </>
     );
   }
 
   // 인트로 스토리
   if (gameState.stage === 'intro') {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-8">
-        <div className="max-w-2xl text-center space-y-2">
-          {typedText.map((line, idx) => (
-            <p key={idx} className="text-lg leading-relaxed">
-              {line}
-            </p>
-          ))}
+      <>
+        {/* HUD */}
+        <div className="hud">
+          <div className="hud-item">STAGE: {getStageInfo()}</div>
+          <div className="hud-item">CLUES: {gameState.clues.length}/3</div>
         </div>
-        {showButton && (
-          <button
-            onClick={() => setGameState({ ...gameState, stage: 'chapter1' })}
-            className="mt-12 px-8 py-3 bg-white text-black font-bold border-2 border-white hover:bg-blue-500 hover:text-white hover:border-blue-500"
-          >
-            계속하기
-          </button>
+
+        <div className="game-container" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div className="text-container">
+            {typedText.map((line, idx) => (
+              <p key={idx} className="text-line">
+                {line || '\u00A0'}
+              </p>
+            ))}
+            {showCursor && <span className="cursor"></span>}
+          </div>
+          {showButton && (
+            <div style={{ textAlign: 'center', marginTop: '40px' }}>
+              <button
+                onClick={() => {
+                  showChapterTitleEffect('CHAPTER 1\n선택의 갈림길', () => {
+                    setGameState({ ...gameState, stage: 'chapter1' });
+                  });
+                }}
+                className="pixel-button"
+                style={{ maxWidth: '300px' }}
+              >
+                ▶ 계속하기
+              </button>
+            </div>
+          )}
+        </div>
+
+        {showChapterTitle && (
+          <div className="chapter-title-overlay">
+            <div className="chapter-title-text" style={{ whiteSpace: 'pre-line' }}>
+              {chapterTitleText}
+            </div>
+          </div>
         )}
-      </div>
+
+        {systemMessage && (
+          <div className="system-message">[SYSTEM] {systemMessage}</div>
+        )}
+      </>
     );
   }
 
   // 챕터 1: 첫 번째 부스 선택
   if (gameState.stage === 'chapter1') {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-8">
-        <h2 className="text-3xl font-bold mb-4 text-blue-500">CHAPTER 1</h2>
-        <h3 className="text-xl mb-12">선택의 갈림길</h3>
-        <p className="mb-8 text-center">앞에 두 개의 문이 보입니다.<br />하나를 선택하세요.</p>
-        <div className="flex flex-col gap-4 w-full max-w-md">
-          {Object.entries(BOOTHS1).map(([key, booth]) => (
-            <button
-              key={key}
-              onClick={() => setGameState({ ...gameState, stage: 'booth1-enter', selectedBooth1: key as Booth1 })}
-              className="px-6 py-4 bg-white text-black font-bold border-2 border-white hover:bg-blue-500 hover:text-white hover:border-blue-500"
-            >
-              {booth.title}
-            </button>
-          ))}
+      <>
+        {/* HUD */}
+        <div className="hud">
+          <div className="hud-item">STAGE: {getStageInfo()}</div>
+          <div className="hud-item highlight">CLUES: {gameState.clues.length}/3</div>
         </div>
-      </div>
+
+        <div className="game-container" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <h2 className="title" style={{ color: '#0099ff' }}>CHAPTER 1</h2>
+          <h3 className="subtitle">선택의 갈림길</h3>
+          <div className="text-container center-text" style={{ marginBottom: '40px' }}>
+            <p className="text-line">앞에 두 개의 문이 보입니다.</p>
+            <p className="text-line">하나를 선택하세요.</p>
+          </div>
+          <div className="button-container">
+            {Object.entries(BOOTHS1).map(([key, booth]) => (
+              <button
+                key={key}
+                onClick={() => {
+                  showSystemMessage('[SYSTEM] 세이브 포인트 저장됨');
+                  showTransitionEffect('LOADING...', () => {
+                    setGameState({ ...gameState, stage: 'booth1-enter', selectedBooth1: key as Booth1 });
+                  });
+                }}
+                className="pixel-button"
+              >
+                ▶ {booth.title}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 메뉴 버튼 */}
+        <div className="menu-buttons">
+          <button className="menu-button" onClick={() => setMenuOpen(true)}>
+            [MENU]
+          </button>
+        </div>
+
+        {/* 메뉴 패널 */}
+        <div className={`menu-panel ${menuOpen ? 'open' : ''}`}>
+          <button className="menu-close" onClick={() => setMenuOpen(false)}>
+            [X]
+          </button>
+          <h3 style={{ color: '#0099ff', marginBottom: '20px' }}>수집한 단서</h3>
+          {gameState.clues.length === 0 ? (
+            <p style={{ color: '#00ff00' }}>아직 수집한 단서가 없습니다.</p>
+          ) : (
+            gameState.clues.map((clue, idx) => (
+              <div key={idx} className="clue-item" style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #0099ff' }}>
+                • {clue}
+              </div>
+            ))
+          )}
+        </div>
+
+        {showTransition && (
+          <div className="transition-overlay loading">
+            <div className="loading-text">{transitionText}</div>
+          </div>
+        )}
+
+        {systemMessage && (
+          <div className="system-message">{systemMessage}</div>
+        )}
+      </>
     );
   }
 
@@ -256,23 +427,59 @@ export default function BeaverEscape() {
   if (gameState.stage === 'booth1-enter' && gameState.selectedBooth1) {
     const booth = BOOTHS1[gameState.selectedBooth1];
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-8">
-        <h2 className="text-2xl font-bold mb-2 text-blue-500">{booth.name}</h2>
-        <h3 className="text-xl mb-8">{booth.title}</h3>
-        <div className="max-w-2xl text-center space-y-2 mb-12">
-          {booth.story.map((line, idx) => (
-            <p key={idx} className="text-lg leading-relaxed">
-              {line}
-            </p>
-          ))}
+      <>
+        <div className="hud">
+          <div className="hud-item">STAGE: {getStageInfo()}</div>
+          <div className="hud-item highlight">CLUES: {gameState.clues.length}/3</div>
         </div>
-        <button
-          onClick={() => setGameState({ ...gameState, stage: 'booth1-wait' })}
-          className="px-8 py-3 bg-white text-black font-bold border-2 border-white hover:bg-blue-500 hover:text-white hover:border-blue-500"
-        >
-          준비 완료
-        </button>
-      </div>
+
+        <div className="game-container" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <h2 className="title" style={{ color: '#0099ff' }}>{booth.name}</h2>
+          <h3 className="subtitle">{booth.title}</h3>
+          <div className="text-container" style={{ marginBottom: '40px' }}>
+            {booth.story.map((line, idx) => (
+              <p key={idx} className="text-line">
+                {line || '\u00A0'}
+              </p>
+            ))}
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <button
+              onClick={() => setGameState({ ...gameState, stage: 'booth1-wait' })}
+              className="pixel-button"
+              style={{ maxWidth: '300px' }}
+            >
+              ▶ 준비 완료
+            </button>
+          </div>
+        </div>
+
+        <div className="menu-buttons">
+          <button className="menu-button" onClick={() => setMenuOpen(true)}>
+            [MENU]
+          </button>
+        </div>
+
+        <div className={`menu-panel ${menuOpen ? 'open' : ''}`}>
+          <button className="menu-close" onClick={() => setMenuOpen(false)}>
+            [X]
+          </button>
+          <h3 style={{ color: '#0099ff', marginBottom: '20px' }}>수집한 단서</h3>
+          {gameState.clues.length === 0 ? (
+            <p style={{ color: '#00ff00' }}>아직 수집한 단서가 없습니다.</p>
+          ) : (
+            gameState.clues.map((clue, idx) => (
+              <div key={idx} className="clue-item" style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #0099ff' }}>
+                • {clue}
+              </div>
+            ))
+          )}
+        </div>
+
+        {systemMessage && (
+          <div className="system-message">{systemMessage}</div>
+        )}
+      </>
     );
   }
 
@@ -280,19 +487,38 @@ export default function BeaverEscape() {
   if (gameState.stage === 'booth1-wait' && gameState.selectedBooth1) {
     const booth = BOOTHS1[gameState.selectedBooth1];
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-8">
-        <h2 className="text-2xl font-bold mb-8 text-blue-500">{booth.title}</h2>
-        <p className="mb-12 text-center text-lg">부스 체험을 진행해주세요.</p>
-        <button
-          onClick={() => {
-            const clue = booth.clue;
-            setGameState({ ...gameState, stage: 'booth1-complete', clues: [clue] });
-          }}
-          className="px-8 py-3 bg-blue-500 text-white font-bold border-2 border-blue-500 hover:bg-blue-600"
-        >
-          체험 완료하기
-        </button>
-      </div>
+      <>
+        <div className="hud">
+          <div className="hud-item">STAGE: {getStageInfo()}</div>
+          <div className="hud-item highlight">CLUES: {gameState.clues.length}/3</div>
+        </div>
+
+        <div className="game-container" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <h2 className="title" style={{ color: '#0099ff' }}>{booth.title}</h2>
+          <div className="text-container center-text" style={{ marginBottom: '40px' }}>
+            <p className="text-line">부스 체험을 진행해주세요.</p>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <button
+              onClick={() => {
+                const clue = booth.clue;
+                showSystemMessage('[SYSTEM] 새로운 단서를 발견했습니다!');
+                setTimeout(() => {
+                  setGameState({ ...gameState, stage: 'booth1-complete', clues: [clue] });
+                }, 1000);
+              }}
+              className="pixel-button primary"
+              style={{ maxWidth: '300px' }}
+            >
+              ▶ 체험 완료하기
+            </button>
+          </div>
+        </div>
+
+        {systemMessage && (
+          <div className="system-message">{systemMessage}</div>
+        )}
+      </>
     );
   }
 
@@ -300,39 +526,126 @@ export default function BeaverEscape() {
   if (gameState.stage === 'booth1-complete' && gameState.selectedBooth1) {
     const booth = BOOTHS1[gameState.selectedBooth1];
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-8">
-        <div className="text-6xl mb-8">✨</div>
-        <h2 className="text-2xl font-bold mb-4 text-blue-500">첫 번째 조각을 발견했습니다</h2>
-        <p className="text-lg mb-12 text-center text-blue-500">"{booth.clue}"</p>
-        <button
-          onClick={() => setGameState({ ...gameState, stage: 'chapter2' })}
-          className="px-8 py-3 bg-white text-black font-bold border-2 border-white hover:bg-blue-500 hover:text-white hover:border-blue-500"
-        >
-          다음으로
-        </button>
-      </div>
+      <>
+        <div className="hud">
+          <div className="hud-item">STAGE: {getStageInfo()}</div>
+          <div className="hud-item highlight">CLUES: {gameState.clues.length}/3</div>
+        </div>
+
+        <div className="game-container" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <h2 className="title" style={{ color: '#0099ff' }}>첫 번째 조각을 발견했습니다</h2>
+          <div className="clue-box">
+            <p className="clue-item">"{booth.clue}"</p>
+          </div>
+          <div style={{ textAlign: 'center', marginTop: '20px' }}>
+            <button
+              onClick={() => {
+                showChapterTitleEffect('CHAPTER 2\n운명의 눈', () => {
+                  setGameState({ ...gameState, stage: 'chapter2' });
+                });
+              }}
+              className="pixel-button"
+              style={{ maxWidth: '300px' }}
+            >
+              ▶ 다음으로
+            </button>
+          </div>
+        </div>
+
+        <div className="menu-buttons">
+          <button className="menu-button" onClick={() => setMenuOpen(true)}>
+            [MENU]
+          </button>
+        </div>
+
+        <div className={`menu-panel ${menuOpen ? 'open' : ''}`}>
+          <button className="menu-close" onClick={() => setMenuOpen(false)}>
+            [X]
+          </button>
+          <h3 style={{ color: '#0099ff', marginBottom: '20px' }}>수집한 단서</h3>
+          {gameState.clues.map((clue, idx) => (
+            <div key={idx} className="clue-item" style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #0099ff' }}>
+              • {clue}
+            </div>
+          ))}
+        </div>
+
+        {showChapterTitle && (
+          <div className="chapter-title-overlay">
+            <div className="chapter-title-text" style={{ whiteSpace: 'pre-line' }}>
+              {chapterTitleText}
+            </div>
+          </div>
+        )}
+
+        {systemMessage && (
+          <div className="system-message">{systemMessage}</div>
+        )}
+      </>
     );
   }
 
   // 챕터 2: 두 번째 부스 선택
   if (gameState.stage === 'chapter2') {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-8">
-        <h2 className="text-3xl font-bold mb-4 text-blue-500">CHAPTER 2</h2>
-        <h3 className="text-xl mb-12">운명의 눈</h3>
-        <p className="mb-8 text-center">포춘 하우스의 문이 열립니다.</p>
-        <div className="flex flex-col gap-4 w-full max-w-md">
-          {Object.entries(BOOTHS2).map(([key, booth]) => (
-            <button
-              key={key}
-              onClick={() => setGameState({ ...gameState, stage: 'booth2-enter', selectedBooth2: key as Booth2 })}
-              className="px-6 py-4 bg-white text-black font-bold border-2 border-white hover:bg-blue-500 hover:text-white hover:border-blue-500"
-            >
-              {booth.title}
-            </button>
+      <>
+        <div className="hud">
+          <div className="hud-item">STAGE: {getStageInfo()}</div>
+          <div className="hud-item highlight">CLUES: {gameState.clues.length}/3</div>
+        </div>
+
+        <div className="game-container" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <h2 className="title" style={{ color: '#0099ff' }}>CHAPTER 2</h2>
+          <h3 className="subtitle">운명의 눈</h3>
+          <div className="text-container center-text" style={{ marginBottom: '40px' }}>
+            <p className="text-line">포춘 하우스의 문이 열립니다.</p>
+          </div>
+          <div className="button-container">
+            {Object.entries(BOOTHS2).map(([key, booth]) => (
+              <button
+                key={key}
+                onClick={() => {
+                  showSystemMessage('[SYSTEM] 세이브 포인트 저장됨');
+                  showTransitionEffect('LOADING...', () => {
+                    setGameState({ ...gameState, stage: 'booth2-enter', selectedBooth2: key as Booth2 });
+                  });
+                }}
+                className="pixel-button"
+              >
+                ▶ {booth.title}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="menu-buttons">
+          <button className="menu-button" onClick={() => setMenuOpen(true)}>
+            [MENU]
+          </button>
+        </div>
+
+        <div className={`menu-panel ${menuOpen ? 'open' : ''}`}>
+          <button className="menu-close" onClick={() => setMenuOpen(false)}>
+            [X]
+          </button>
+          <h3 style={{ color: '#0099ff', marginBottom: '20px' }}>수집한 단서</h3>
+          {gameState.clues.map((clue, idx) => (
+            <div key={idx} className="clue-item" style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #0099ff' }}>
+              • {clue}
+            </div>
           ))}
         </div>
-      </div>
+
+        {showTransition && (
+          <div className="transition-overlay loading">
+            <div className="loading-text">{transitionText}</div>
+          </div>
+        )}
+
+        {systemMessage && (
+          <div className="system-message">{systemMessage}</div>
+        )}
+      </>
     );
   }
 
@@ -340,23 +653,55 @@ export default function BeaverEscape() {
   if (gameState.stage === 'booth2-enter' && gameState.selectedBooth2) {
     const booth = BOOTHS2[gameState.selectedBooth2];
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-8">
-        <h2 className="text-2xl font-bold mb-2 text-blue-500">{booth.name}</h2>
-        <h3 className="text-xl mb-8">{booth.title}</h3>
-        <div className="max-w-2xl text-center space-y-2 mb-12">
-          {booth.story.map((line, idx) => (
-            <p key={idx} className="text-lg leading-relaxed">
-              {line}
-            </p>
+      <>
+        <div className="hud">
+          <div className="hud-item">STAGE: {getStageInfo()}</div>
+          <div className="hud-item highlight">CLUES: {gameState.clues.length}/3</div>
+        </div>
+
+        <div className="game-container" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <h2 className="title" style={{ color: '#0099ff' }}>{booth.name}</h2>
+          <h3 className="subtitle">{booth.title}</h3>
+          <div className="text-container" style={{ marginBottom: '40px' }}>
+            {booth.story.map((line, idx) => (
+              <p key={idx} className="text-line">
+                {line || '\u00A0'}
+              </p>
+            ))}
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <button
+              onClick={() => setGameState({ ...gameState, stage: 'booth2-wait' })}
+              className="pixel-button"
+              style={{ maxWidth: '300px' }}
+            >
+              ▶ 준비 완료
+            </button>
+          </div>
+        </div>
+
+        <div className="menu-buttons">
+          <button className="menu-button" onClick={() => setMenuOpen(true)}>
+            [MENU]
+          </button>
+        </div>
+
+        <div className={`menu-panel ${menuOpen ? 'open' : ''}`}>
+          <button className="menu-close" onClick={() => setMenuOpen(false)}>
+            [X]
+          </button>
+          <h3 style={{ color: '#0099ff', marginBottom: '20px' }}>수집한 단서</h3>
+          {gameState.clues.map((clue, idx) => (
+            <div key={idx} className="clue-item" style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #0099ff' }}>
+              • {clue}
+            </div>
           ))}
         </div>
-        <button
-          onClick={() => setGameState({ ...gameState, stage: 'booth2-wait' })}
-          className="px-8 py-3 bg-white text-black font-bold border-2 border-white hover:bg-blue-500 hover:text-white hover:border-blue-500"
-        >
-          준비 완료
-        </button>
-      </div>
+
+        {systemMessage && (
+          <div className="system-message">{systemMessage}</div>
+        )}
+      </>
     );
   }
 
@@ -364,125 +709,309 @@ export default function BeaverEscape() {
   if (gameState.stage === 'booth2-wait' && gameState.selectedBooth2) {
     const booth = BOOTHS2[gameState.selectedBooth2];
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-8">
-        <h2 className="text-2xl font-bold mb-8 text-blue-500">{booth.title}</h2>
-        <p className="mb-12 text-center text-lg">부스 체험을 진행해주세요.</p>
-        <button
-          onClick={() => {
-            const clue = booth.clue;
-            setGameState({ ...gameState, stage: 'booth2-complete', clues: [...gameState.clues, clue] });
-          }}
-          className="px-8 py-3 bg-blue-500 text-white font-bold border-2 border-blue-500 hover:bg-blue-600"
-        >
-          체험 완료하기
-        </button>
-      </div>
+      <>
+        <div className="hud">
+          <div className="hud-item">STAGE: {getStageInfo()}</div>
+          <div className="hud-item highlight">CLUES: {gameState.clues.length}/3</div>
+        </div>
+
+        <div className="game-container" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <h2 className="title" style={{ color: '#0099ff' }}>{booth.title}</h2>
+          <div className="text-container center-text" style={{ marginBottom: '40px' }}>
+            <p className="text-line">부스 체험을 진행해주세요.</p>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <button
+              onClick={() => {
+                const clue = booth.clue;
+                showSystemMessage('[SYSTEM] 새로운 단서를 발견했습니다!');
+                setTimeout(() => {
+                  setGameState({ ...gameState, stage: 'booth2-complete', clues: [...gameState.clues, clue] });
+                }, 1000);
+              }}
+              className="pixel-button primary"
+              style={{ maxWidth: '300px' }}
+            >
+              ▶ 체험 완료하기
+            </button>
+          </div>
+        </div>
+
+        {systemMessage && (
+          <div className="system-message">{systemMessage}</div>
+        )}
+      </>
     );
   }
 
   // 부스2 완료
   if (gameState.stage === 'booth2-complete') {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-8">
-        <div className="text-6xl mb-8">✨</div>
-        <h2 className="text-2xl font-bold mb-4 text-blue-500">두 번째 조각을 발견했습니다</h2>
-        <div className="mb-12">
-          <p className="text-sm mb-2 text-center">수집한 단서:</p>
+      <>
+        <div className="hud">
+          <div className="hud-item">STAGE: {getStageInfo()}</div>
+          <div className="hud-item highlight">CLUES: {gameState.clues.length}/3</div>
+        </div>
+
+        <div className="game-container" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <h2 className="title" style={{ color: '#0099ff' }}>두 번째 조각을 발견했습니다</h2>
+          <div className="clue-box">
+            <p className="text-line" style={{ textAlign: 'center', marginBottom: '12px' }}>수집한 단서:</p>
+            {gameState.clues.map((clue, idx) => (
+              <p key={idx} className="clue-item">
+                • {clue}
+              </p>
+            ))}
+          </div>
+          <div style={{ textAlign: 'center', marginTop: '20px' }}>
+            <button
+              onClick={() => {
+                showChapterTitleEffect('CHAPTER 3\n진실의 문', () => {
+                  setGameState({ ...gameState, stage: 'chapter3' });
+                });
+              }}
+              className="pixel-button"
+              style={{ maxWidth: '300px' }}
+            >
+              ▶ 다음으로
+            </button>
+          </div>
+        </div>
+
+        <div className="menu-buttons">
+          <button className="menu-button" onClick={() => setMenuOpen(true)}>
+            [MENU]
+          </button>
+        </div>
+
+        <div className={`menu-panel ${menuOpen ? 'open' : ''}`}>
+          <button className="menu-close" onClick={() => setMenuOpen(false)}>
+            [X]
+          </button>
+          <h3 style={{ color: '#0099ff', marginBottom: '20px' }}>수집한 단서</h3>
           {gameState.clues.map((clue, idx) => (
-            <p key={idx} className="text-blue-500 text-center mb-1">
+            <div key={idx} className="clue-item" style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #0099ff' }}>
               • {clue}
-            </p>
+            </div>
           ))}
         </div>
-        <button
-          onClick={() => setGameState({ ...gameState, stage: 'chapter3' })}
-          className="px-8 py-3 bg-white text-black font-bold border-2 border-white hover:bg-blue-500 hover:text-white hover:border-blue-500"
-        >
-          다음으로
-        </button>
-      </div>
+
+        {showChapterTitle && (
+          <div className="chapter-title-overlay">
+            <div className="chapter-title-text" style={{ whiteSpace: 'pre-line' }}>
+              {chapterTitleText}
+            </div>
+          </div>
+        )}
+
+        {systemMessage && (
+          <div className="system-message">{systemMessage}</div>
+        )}
+      </>
     );
   }
 
   // 챕터 3: 진실의 방
   if (gameState.stage === 'chapter3') {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-8">
-        <h2 className="text-3xl font-bold mb-4 text-blue-500">CHAPTER 3</h2>
-        <h3 className="text-xl mb-12">진실의 문</h3>
-        <p className="mb-8 text-center">
-          모든 조각이 모였습니다.<br />
-          이제 2층으로 올라가세요.<br />
-          <span className="text-blue-500">진실의 방</span>이 당신을 기다리고 있습니다.
-        </p>
-        <button
-          onClick={() => setGameState({ ...gameState, stage: 'finalBooth-enter' })}
-          className="px-8 py-3 bg-white text-black font-bold border-2 border-white hover:bg-blue-500 hover:text-white hover:border-blue-500"
-        >
-          진실의 방으로
-        </button>
-      </div>
+      <>
+        <div className="hud">
+          <div className="hud-item">STAGE: {getStageInfo()}</div>
+          <div className="hud-item highlight">CLUES: {gameState.clues.length}/3</div>
+        </div>
+
+        <div className="game-container" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <h2 className="title" style={{ color: '#0099ff' }}>CHAPTER 3</h2>
+          <h3 className="subtitle">진실의 문</h3>
+          <div className="text-container center-text" style={{ marginBottom: '40px' }}>
+            <p className="text-line">모든 조각이 모였습니다.</p>
+            <p className="text-line">이제 2층으로 올라가세요.</p>
+            <p className="text-line" style={{ color: '#0099ff' }}>진실의 방이 당신을 기다리고 있습니다.</p>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <button
+              onClick={() => {
+                showSystemMessage('[SYSTEM] 최종 단계 진입');
+                showTransitionEffect('LOADING...', () => {
+                  setGameState({ ...gameState, stage: 'finalBooth-enter' });
+                });
+              }}
+              className="pixel-button"
+              style={{ maxWidth: '300px' }}
+            >
+              ▶ 진실의 방으로
+            </button>
+          </div>
+        </div>
+
+        <div className="menu-buttons">
+          <button className="menu-button" onClick={() => setMenuOpen(true)}>
+            [MENU]
+          </button>
+        </div>
+
+        <div className={`menu-panel ${menuOpen ? 'open' : ''}`}>
+          <button className="menu-close" onClick={() => setMenuOpen(false)}>
+            [X]
+          </button>
+          <h3 style={{ color: '#0099ff', marginBottom: '20px' }}>수집한 단서</h3>
+          {gameState.clues.map((clue, idx) => (
+            <div key={idx} className="clue-item" style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #0099ff' }}>
+              • {clue}
+            </div>
+          ))}
+        </div>
+
+        {showTransition && (
+          <div className="transition-overlay loading">
+            <div className="loading-text">{transitionText}</div>
+          </div>
+        )}
+
+        {systemMessage && (
+          <div className="system-message">{systemMessage}</div>
+        )}
+      </>
     );
   }
 
   // 진실의 방 진입
   if (gameState.stage === 'finalBooth-enter') {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-8">
-        <h2 className="text-2xl font-bold mb-2 text-blue-500">{FINAL_BOOTH.name}</h2>
-        <h3 className="text-xl mb-8">{FINAL_BOOTH.title}</h3>
-        <div className="max-w-2xl text-center space-y-2 mb-12">
-          {FINAL_BOOTH.story.map((line, idx) => (
-            <p key={idx} className="text-lg leading-relaxed">
-              {line}
-            </p>
+      <>
+        <div className="hud">
+          <div className="hud-item">STAGE: {getStageInfo()}</div>
+          <div className="hud-item highlight">CLUES: {gameState.clues.length}/3</div>
+        </div>
+
+        <div className="game-container" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <h2 className="title" style={{ color: '#0099ff' }}>{FINAL_BOOTH.name}</h2>
+          <h3 className="subtitle">{FINAL_BOOTH.title}</h3>
+          <div className="text-container" style={{ marginBottom: '40px' }}>
+            {FINAL_BOOTH.story.map((line, idx) => (
+              <p key={idx} className="text-line">
+                {line || '\u00A0'}
+              </p>
+            ))}
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <button
+              onClick={() => setGameState({ ...gameState, stage: 'finalBooth-wait' })}
+              className="pixel-button"
+              style={{ maxWidth: '300px' }}
+            >
+              ▶ 준비 완료
+            </button>
+          </div>
+        </div>
+
+        <div className="menu-buttons">
+          <button className="menu-button" onClick={() => setMenuOpen(true)}>
+            [MENU]
+          </button>
+        </div>
+
+        <div className={`menu-panel ${menuOpen ? 'open' : ''}`}>
+          <button className="menu-close" onClick={() => setMenuOpen(false)}>
+            [X]
+          </button>
+          <h3 style={{ color: '#0099ff', marginBottom: '20px' }}>수집한 단서</h3>
+          {gameState.clues.map((clue, idx) => (
+            <div key={idx} className="clue-item" style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #0099ff' }}>
+              • {clue}
+            </div>
           ))}
         </div>
-        <button
-          onClick={() => setGameState({ ...gameState, stage: 'finalBooth-wait' })}
-          className="px-8 py-3 bg-white text-black font-bold border-2 border-white hover:bg-blue-500 hover:text-white hover:border-blue-500"
-        >
-          준비 완료
-        </button>
-      </div>
+
+        {systemMessage && (
+          <div className="system-message">{systemMessage}</div>
+        )}
+      </>
     );
   }
 
   // 진실의 방 체험 대기
   if (gameState.stage === 'finalBooth-wait') {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-8">
-        <h2 className="text-2xl font-bold mb-8 text-blue-500">진실의 방</h2>
-        <p className="mb-12 text-center text-lg">부스 체험을 진행해주세요.</p>
-        <button
-          onClick={() => setGameState({ ...gameState, stage: 'ending' })}
-          className="px-8 py-3 bg-blue-500 text-white font-bold border-2 border-blue-500 hover:bg-blue-600"
-        >
-          체험 완료하기
-        </button>
-      </div>
+      <>
+        <div className="hud">
+          <div className="hud-item">STAGE: {getStageInfo()}</div>
+          <div className="hud-item highlight">CLUES: {gameState.clues.length}/3</div>
+        </div>
+
+        <div className="game-container" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <h2 className="title" style={{ color: '#0099ff' }}>진실의 방</h2>
+          <div className="text-container center-text" style={{ marginBottom: '40px' }}>
+            <p className="text-line">부스 체험을 진행해주세요.</p>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <button
+              onClick={() => {
+                showSystemMessage('[SYSTEM] 모든 단서를 수집했습니다!');
+                setTimeout(() => {
+                  setGameState({ ...gameState, stage: 'ending' });
+                }, 1000);
+              }}
+              className="pixel-button primary"
+              style={{ maxWidth: '300px' }}
+            >
+              ▶ 체험 완료하기
+            </button>
+          </div>
+        </div>
+
+        {systemMessage && (
+          <div className="system-message">{systemMessage}</div>
+        )}
+      </>
     );
   }
 
   // 엔딩
   if (gameState.stage === 'ending') {
+    const booth1Name = gameState.selectedBooth1 ? BOOTHS1[gameState.selectedBooth1].title : '선택 안 함';
+    const booth2Name = gameState.selectedBooth2 ? BOOTHS2[gameState.selectedBooth2].title : '선택 안 함';
+    
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-8">
-        <div className="text-6xl mb-8">🎮</div>
-        <h2 className="text-4xl font-bold mb-8 text-blue-500">탈출 성공!</h2>
-        <p className="text-center mb-4">
-          당신은 진짜 자신을 발견했습니다.
-        </p>
-        <p className="text-center mb-12 text-blue-500">
-          이제 무기력의 세계에서 벗어났습니다.
-        </p>
-        <button
-          onClick={reset}
-          className="px-8 py-3 bg-white text-black font-bold border-2 border-white hover:bg-blue-500 hover:text-white hover:border-blue-500"
-        >
-          처음으로
-        </button>
-      </div>
+      <>
+        <div className="hud">
+          <div className="hud-item">STAGE: {getStageInfo()}</div>
+          <div className="hud-item highlight">CLUES: {gameState.clues.length}/3</div>
+        </div>
+
+        <div className="game-container" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <h2 className="title" style={{ color: '#0099ff' }}>탈출 성공!</h2>
+          
+          <div className="text-container center-text" style={{ marginBottom: '40px' }}>
+            <p className="text-line">당신은 진짜 자신을 발견했습니다.</p>
+            <p className="text-line" style={{ color: '#0099ff' }}>이제 무기력의 세계에서 벗어났습니다.</p>
+          </div>
+
+          <div className="result-container">
+            <h3 style={{ color: '#0099ff', textAlign: 'center', marginBottom: '16px' }}>YOUR RESULT</h3>
+            <div className="result-row">
+              <span className="result-label">플레이 타임:</span>
+              <span className="result-value">{formatTime(playTime)}</span>
+            </div>
+            <div className="result-row">
+              <span className="result-label">선택한 경로 (1층):</span>
+              <span className="result-value">{booth1Name}</span>
+            </div>
+            <div className="result-row">
+              <span className="result-label">선택한 경로 (2층):</span>
+              <span className="result-value">{booth2Name}</span>
+            </div>
+            <div className="result-row">
+              <span className="result-label">수집한 단서:</span>
+              <span className="result-value">{gameState.clues.length}/3</span>
+            </div>
+          </div>
+        </div>
+
+        {systemMessage && (
+          <div className="system-message">{systemMessage}</div>
+        )}
+      </>
     );
   }
 
