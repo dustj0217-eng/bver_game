@@ -129,6 +129,7 @@ export default function BeaverEscape() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [systemMessage, setSystemMessage] = useState<string | null>(null);
   const [showTransition, setShowTransition] = useState(false);
+  const [transitionText, setTransitionText] = useState('LOADING...');
   const [showChapterTitle, setShowChapterTitle] = useState(false);
   const [chapterTitleText, setChapterTitleText] = useState('');
   const [startTime, setStartTime] = useState<number>(Date.now());
@@ -166,6 +167,7 @@ export default function BeaverEscape() {
 
   // 트랜지션 효과
   const showTransitionEffect = (text: string, callback: () => void) => {
+    setTransitionText(text);
     setShowTransition(true);
     setTimeout(() => {
       setShowTransition(false);
@@ -277,6 +279,9 @@ export default function BeaverEscape() {
           <button
             onClick={() => {
               setStartTime(Date.now());
+              showTransitionEffect('LOADING...', () => {
+                setGameState({ ...gameState, stage: 'intro' });
+              });
             }}
             className="pixel-button"
             style={{ maxWidth: '300px' }}
@@ -284,6 +289,11 @@ export default function BeaverEscape() {
             ▶ 시작하기
           </button>
         </div>
+        {showTransition && (
+          <div className="transition-overlay loading">
+            <div className="loading-text">{transitionText}</div>
+          </div>
+        )}
       </>
     );
   }
@@ -362,6 +372,9 @@ export default function BeaverEscape() {
                 key={key}
                 onClick={() => {
                   showSystemMessage('[SYSTEM] 세이브 포인트 저장됨');
+                  showTransitionEffect('LOADING...', () => {
+                    setGameState({ ...gameState, stage: 'booth1-enter', selectedBooth1: key as Booth1 });
+                  });
                 }}
                 className="pixel-button"
               >
@@ -394,6 +407,12 @@ export default function BeaverEscape() {
             ))
           )}
         </div>
+
+        {showTransition && (
+          <div className="transition-overlay loading">
+            <div className="loading-text">{transitionText}</div>
+          </div>
+        )}
 
         {systemMessage && (
           <div className="system-message">{systemMessage}</div>
@@ -585,6 +604,9 @@ export default function BeaverEscape() {
                 key={key}
                 onClick={() => {
                   showSystemMessage('[SYSTEM] 세이브 포인트 저장됨');
+                  showTransitionEffect('LOADING...', () => {
+                    setGameState({ ...gameState, stage: 'booth2-enter', selectedBooth2: key as Booth2 });
+                  });
                 }}
                 className="pixel-button"
               >
@@ -611,6 +633,12 @@ export default function BeaverEscape() {
             </div>
           ))}
         </div>
+
+        {showTransition && (
+          <div className="transition-overlay loading">
+            <div className="loading-text">{transitionText}</div>
+          </div>
+        )}
 
         {systemMessage && (
           <div className="system-message">{systemMessage}</div>
@@ -802,6 +830,9 @@ export default function BeaverEscape() {
             <button
               onClick={() => {
                 showSystemMessage('[SYSTEM] 최종 단계 진입');
+                showTransitionEffect('LOADING...', () => {
+                  setGameState({ ...gameState, stage: 'finalBooth-enter' });
+                });
               }}
               className="pixel-button"
               style={{ maxWidth: '300px' }}
@@ -828,6 +859,12 @@ export default function BeaverEscape() {
             </div>
           ))}
         </div>
+
+        {showTransition && (
+          <div className="transition-overlay loading">
+            <div className="loading-text">{transitionText}</div>
+          </div>
+        )}
 
         {systemMessage && (
           <div className="system-message">{systemMessage}</div>
