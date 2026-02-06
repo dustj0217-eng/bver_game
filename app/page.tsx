@@ -1006,6 +1006,16 @@ export default function BeaverEscape() {
               <span className="result-value">{gameState.clues.length}/3</span>
             </div>
           </div>
+
+          <div style={{ textAlign: 'center', marginTop: '20px' }}>
+            <button
+              onClick={reset}
+              className="pixel-button"
+              style={{ maxWidth: '300px' }}
+            >
+              ▶ 처음으로
+            </button>
+          </div>
         </div>
 
         {systemMessage && (
