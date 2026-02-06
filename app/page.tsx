@@ -31,7 +31,7 @@ interface GameState {
 
 const BOOTHS1 = {
   emotion: {
-    name: 'STAGE 01 - EMOTION FACTORY',
+    name: 'EMOTION FACTORY',
     title: '이모션 팩토리',
     story: [
       '수많은 색색깔의 비즈들이 바닥에 흩어져 있다.',
@@ -42,7 +42,7 @@ const BOOTHS1 = {
     clue: '숨겨진 진짜 감정들을 마주했다. 두려움, 분노, 슬픔... 그것들은 모두 당신의 일부였다.'
   },
   bakery: {
-    name: 'STAGE 01 - TINY TINY BAKERY',
+    name: 'TINY TINY BAKERY',
     title: '티니 타이니 베이커리',
     story: [
       '작은 오븐에서 열기가 피어오른다.',
@@ -56,7 +56,7 @@ const BOOTHS1 = {
 
 const BOOTHS2 = {
   tarot: {
-    name: 'STAGE 02 - TAROT',
+    name: 'FORTUNE - TAROT',
     title: '포춘 하우스 - 타로',
     story: [
       '서양의 신비로운 카드들이 펼쳐진다.',
@@ -67,7 +67,7 @@ const BOOTHS2 = {
     clue: '운명의 카드는 말한다. 당신에게 일어난 일들은 우연이 아니라 필연이었다고. 그 속에서 당신은 계속 선택해왔다.'
   },
   saju: {
-    name: 'STAGE 02 - SAJU',
+    name: 'FORTUNE - SAJU',
     title: '포춘 하우스 - 사주',
     story: [
       '동양의 만세력이 펼쳐진다.',
@@ -95,7 +95,7 @@ const INTRO_STORY = [
 ];
 
 const FINAL_BOOTH = {
-  name: 'STAGE 03 - ROOM OF TRUTH',
+  name: 'ROOM OF TRUTH',
   title: '진실의 방',
   story: [
     '2층의 문이 열린다.',
