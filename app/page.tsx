@@ -459,7 +459,14 @@ export default function BeaverEscape() {
           <TypedText />
         </div>
         {showButton && (
-          <div style={{ textAlign: 'center' }}>
+          <div className="button-container">
+            <button
+              onClick={() => setGameState({ ...gameState, stage: 'chapter1', selectedBooth1: null })}
+              className="pixel-button"
+              style={{ maxWidth: '300px' }}
+            >
+              ◀ 뒤로가기
+            </button>
             <button
               onClick={() => setGameState({ ...gameState, stage: 'booth1-wait' })}
               className="pixel-button"
@@ -563,7 +570,14 @@ export default function BeaverEscape() {
           <TypedText />
         </div>
         {showButton && (
-          <div style={{ textAlign: 'center' }}>
+          <div className="button-container">
+            <button
+              onClick={() => setGameState({ ...gameState, stage: 'chapter2', selectedBooth2: null })}
+              className="pixel-button"
+              style={{ maxWidth: '300px' }}
+            >
+              ◀ 뒤로가기
+            </button>
             <button
               onClick={() => setGameState({ ...gameState, stage: 'booth2-wait' })}
               className="pixel-button"
