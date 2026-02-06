@@ -66,6 +66,10 @@ body {
   animation: slideUp 0.3s ease-out;
 }
 
+.quest-message {
+  color: #ffff00; /* 노란색 */
+}
+
 @keyframes slideUp {
   from {
     bottom: -50px;

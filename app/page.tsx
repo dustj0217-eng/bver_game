@@ -31,24 +31,24 @@ interface GameState {
 
 const BOOTHS1 = {
   emotion: {
-    name: 'EMOTION FACTORY',
+    name: 'STAGE 01 - EMOTION FACTORY',
     title: '이모션 팩토리',
     story: [
       '수많은 색색깔의 비즈들이 바닥에 흩어져 있다.',
       '무질서하게 뒤섞인 감정들... 당신은 이것들을 분류해야 한다.',
       '',
-      '뒤섞인 감정의 비즈를 분류하여, 숨겨진 당신의 진짜 마음을 데이터 팩에 담아라.'
+      '[QUEST] 뒤섞인 감정의 비즈를 분류하여, 숨겨진 당신의 진짜 마음을 데이터 팩에 담아라.'
     ],
     clue: '숨겨진 진짜 감정들을 마주했다. 두려움, 분노, 슬픔... 그것들은 모두 당신의 일부였다.'
   },
   bakery: {
-    name: 'TINY TINY BAKERY',
+    name: 'STAGE 01 - TINY TINY BAKERY',
     title: '티니 타이니 베이커리',
     story: [
       '작은 오븐에서 열기가 피어오른다.',
       '거대했던 근심과 불안, 이제 그것들을 압축할 시간이다.',
       '',
-      '거대했던 근심과 불안을 뜨거운 열로 압축해서 한 손에 쏙 들어오는 단단한 키링으로 만들어 보자.'
+      '[QUEST] 거대했던 근심과 불안을 뜨거운 열로 압축해서 한 손에 쏙 들어오는 단단한 키링으로 만들어라.'
     ],
     clue: '거대해 보였던 불안들을 작게 압축하고 나니, 그것들이 당신을 지켜온 방어막이었음을 깨달았다.'
   }
@@ -56,24 +56,24 @@ const BOOTHS1 = {
 
 const BOOTHS2 = {
   tarot: {
-    name: 'FORTUNE HOUSE - TAROT',
+    name: 'STAGE 02 - TAROT',
     title: '포춘 하우스 - 타로',
     story: [
       '서양의 신비로운 카드들이 펼쳐진다.',
       '각 카드마다 당신의 운명이 새겨져 있다.',
       '',
-      '당신의 운명에 발생한 작은 글리치들을 타로 카드로 확인하라.'
+      '[QUEST] 당신의 운명에 발생한 작은 글리치들을 타로 카드로 확인하라.'
     ],
     clue: '운명의 카드는 말한다. 당신에게 일어난 일들은 우연이 아니라 필연이었다고. 그 속에서 당신은 계속 선택해왔다.'
   },
   saju: {
-    name: 'FORTUNE HOUSE - SAJU',
+    name: 'STAGE 02 - SAJU',
     title: '포춘 하우스 - 사주',
     story: [
       '동양의 만세력이 펼쳐진다.',
       '시간과 공간에 새겨진 당신의 운명.',
       '',
-      '당신의 운명에 발생한 작은 글리치들을 사주 만세력으로 확인하라.'
+      '[QUEST] 당신의 운명에 발생한 작은 글리치들을 사주 만세력으로 확인하라.'
     ],
     clue: '만세력은 보여준다. 당신이 태어난 시간과 공간이 만든 고유한 패턴. 그것이 당신을 이루는 뼈대였다. 그러나 길을 개척하는 건 당신의 몫이다.'
   }
@@ -82,11 +82,16 @@ const BOOTHS2 = {
 const INTRO_STORY = [
   '당신은 열심히 사는 비버였다.',
   '그러나 아무도 눈치채지 못했다. 당신의 열심 아래에, 무기력이 잠들어 있다는 것을...',
-  '오늘도 그런 날 중 하나였다. 열심히 살지만, 근본적으로는 공허한 나날들.',
+  '어제도, 엊그제도 그런 날 중 하나였다. 열심히 살지만, 근본적으로는 공허한 나날들.',
   '',
   '당신은 쏟아지는 현실의 짐을 피해 낯선 플스방으로 숨어들었다.',
   '게임 패드를 잡고 잠이 든 찰나, 경쾌한 8비트 사운드와 함께...',
-  '눈앞의 현실이 픽셀로 조각나기 시작한다.'
+  '눈앞의 현실이 픽셀로 조각나기 시작한다.',
+  '',
+  '탈출하려면 이 세계의 룰을 따라야 한다.',
+  '각 관문들을 클리어하고, 당신의 진실을 마주하라.',
+  '',
+  '[QUEST] 3개의 관문이 감지되었습니다. 순서대로 클리어하세요.'
 ];
 
 const FINAL_BOOTH = {
@@ -100,7 +105,9 @@ const FINAL_BOOTH = {
     '이 모든 것이 얽혀 만들어진 존재.',
     '',
     '당신은 어떤 비버인가?',
-    '무기력 속에서도 살아남은 당신은 누구인가?'
+    '무기력 속에서도 살아남은 당신은 누구인가?',
+    '',
+    '[QUEST] 당신의 진실과 마주하라.'
   ]
 };
 
@@ -281,7 +288,7 @@ export default function BeaverEscape() {
   const HUD = () => (
     <div className="hud">
       <div className="hud-item">STAGE: {getStageInfo()}</div>
-      <div className="hud-item highlight">CLUES: {gameState.clues.length}/3</div>
+      <div className="hud-item highlight">CLUES: {gameState.clues.length}/4</div>
     </div>
   );
 
@@ -327,11 +334,19 @@ export default function BeaverEscape() {
   // 타이핑 텍스트 렌더링
   const TypedText = ({ centerText = false }: { centerText?: boolean }) => (
     <div className={`text-container ${centerText ? 'center-text' : ''}`}>
-      {typedText.map((line, idx) => (
-        <p key={idx} className="text-line">
-          {line || '\u00A0'}
-        </p>
-      ))}
+      {typedText.map((line, idx) => {
+        const isQuest = line.startsWith('[QUEST]');
+        const className = isQuest ? 'quest-message' : '';
+        
+        return (
+          <p 
+            key={idx} 
+            className={`text-line ${className}`}
+          >
+            {line || '\u00A0'}
+          </p>
+        );
+      })}
       {showCursor && <span className="cursor"></span>}
     </div>
   );
@@ -740,7 +755,7 @@ export default function BeaverEscape() {
           </div>
           <div className="result-row">
             <span className="result-label">수집한 단서:</span>
-            <span className="result-value">{gameState.clues.length}/3</span>
+            <span className="result-value">{gameState.clues.length}/4</span>
           </div>
         </div>
 
