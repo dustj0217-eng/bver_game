@@ -170,8 +170,10 @@ export default function BeaverEscape() {
     setTransitionText(text);
     setShowTransition(true);
     setTimeout(() => {
-      setShowTransition(false);
-      callback();
+      callback(); // 먼저 화면 전환
+      setTimeout(() => {
+        setShowTransition(false); // 그 다음 오버레이 제거
+      }, 100);
     }, 1000);
   };
 
