@@ -95,7 +95,7 @@ const INTRO_STORY = [
 ];
 
 const FINAL_BOOTH = {
-  name: 'ROOM OF TRUTH',
+  name: 'STAGE 03 - ROOM OF TRUTH',
   title: '진실의 방',
   story: [
     '2층의 문이 열린다.',
